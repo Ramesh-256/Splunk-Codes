@@ -1,0 +1,41 @@
+<panel>
+
+      <chart>
+
+        <search>
+
+          <query>index=_internal |stats count by bytes |search count&gt;60</query>
+
+          <earliest>-24h@h</earliest>
+
+          <latest>now</latest>
+
+            <sampleRatio>1</sampleRatio>
+
+          <done>
+
+            <set token="export_sid">$job.sid$</set>
+
+          </done>
+
+        </search>
+
+        <option name="charting.chart">pie</option>
+
+        <option name="charting.drilldown">none</option>
+
+        <option name="height">477</option>
+
+         <option name="charting.seriesColors">[#00ff00,#004445, #2c786c, #faf5e4,#f8b400,#fc8a15]</option>
+
+      </chart>
+
+      <html>
+
+       <a class="btn btn-primary" role="button" href="/api/search/jobs/$export_sid$/results?isDownload=true&amp;timeFormat=%25FT%25T.%25Q%25%3Az&amp;maxLines=0&amp;count=0&amp;filename=h&amp;outputMode=csv">Download CSV</a>
+
+       <h1>$export_sid$</h1>
+
+      </html>
+
+    </panel>
