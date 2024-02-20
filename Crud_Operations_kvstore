@@ -1,0 +1,118 @@
+require([
+    'underscore',
+    'jquery',
+    'splunkjs/mvc',
+    'splunkjs/mvc/tableview',
+    'splunkjs/mvc/simplexml/ready!'
+], function(_, $, mvc, TableView) {
+ 
+ 
+
+    document.getElementById('queuenamess').ariaPlaceholder="Hello Nani";
+     var m;
+     var qn2;
+     var in2;
+     var rn2;
+     var key_update;
+    var tokens = mvc.Components.get('submitted');
+    var defaultTokenModel = mvc.Components.get("default");
+    var taskCollectionSearch = mvc.Components.get('taskCollectionSearch');
+    var deleteSearch = mvc.Components.get('deleteSearch');
+    var updateSearch = mvc.Components.get('updateSearch');
+    var taskCollectionTabl = mvc.Components.get('taskCollectionTable');
+    
+     
+ 
+    taskCollectionTabl.on('click', function(e) {
+ 
+    e.preventDefault();
+   
+     if(e['field'] === 'Delete') {
+       
+        tokens.unset('setupdate');
+        tokens.set('plaindelete',"token_val");  
+       m= e.data['row.key'];
+     
+     
+    }
+       else if(e['field'] === 'Update') {
+        tokens.unset('plaindelete');
+        tokens.set('setupdate','setted');
+        key_update=e.data['row.key'];
+          sq2=e.data['row.ServiceName'];
+          qn2=e.data['row.QueueName'];
+          in2=e.data['row.Interval'];
+          rn2=e.data['row.Recipients'];
+         
+          tokens.unset('recep');
+          tokens.set("serviceName_tkn1",sq2);
+          tokens.set('QueueName_tkn1',`${qn2}`);
+          tokens.set('interval_tkn1',in2);
+          tokens.set('recipient_tkn1',rn2);
+          $("#sname button").prop("disabled", true).css("pointer-events", "none");
+          $("#qname button").prop("disabled", true).css("pointer-events", "none");
+          
+            
+          
+        
+      
+         
+    }
+    });
+ 
+    $(document).on('click', '#delete', function(e) {
+ 
+        e.preventDefault();
+        tokens.set('delete_key_tok',m);
+ 
+    })
+    $(document).on('click', '#cancel', function(e) {
+ 
+        e.preventDefault();
+        tokens.unset('plaindelete');
+    })
+    $(document).on('click', '#cAncel', function(e) {
+ 
+        e.preventDefault();
+        tokens.unset('setupdate');
+    })
+   
+    deleteSearch.on('search:done', function() {
+        tokens.unset('plaindelete');
+        taskCollectionSearch.startSearch();
+        tokens.unset('delete_key_tok');
+ 
+    });
+ 
+ 
+    $(document).on('click', '#update', function(e) {
+ 
+        e.preventDefault();
+        var serviceNames_1 = defaultTokenModel.get("form.svname");
+        var queuenames_1= defaultTokenModel.get("form.qname");
+        var interval_1=defaultTokenModel.get("form.inter");
+        var recipient_1=defaultTokenModel.get("form.recep");
+ 
+        tokens.set('key_2',key_update);
+       
+        tokens.set('ServiceName_2',serviceNames_1);
+        tokens.set('QueueName_2',queuenames_1);
+        tokens.set('Interval_2',interval_1);
+        tokens.set('Recipients_2',recipient_1);
+        updateSearch.startSearch();
+    });
+ 
+    updateSearch.on('search:done', function() {
+ 
+        taskCollectionSearch.startSearch();
+        tokens.unset('key_2');
+        tokens.unset('form.svname');
+        tokens.unset('form.qname');
+        tokens.unset('form.recep');
+        tokens.unset('form.inter');
+        tokens.unset('setupdate');
+       
+ 
+        });
+
+});
