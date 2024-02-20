@@ -1,0 +1,43 @@
+require([
+    'underscore',
+    'jquery',
+    'splunkjs/mvc',
+    'splunkjs/mvc/tableview',
+    'splunkjs/mvc/simplexml/ready!'
+], function(_, $, mvc, TableView) {
+
+var CustomTooltipRenderer = TableView.BaseCellRenderer.extend({
+            canRender: function(cell) {
+                return cell.field === 'Recipients';
+            },
+            render: function($td, cell) {
+               
+                var message=1;
+                var tip = cell.value;
+              
+                message="  "+message;
+       
+
+               
+                if(message.length > 48) { message = message.substring(0,47) + "..." }
+               
+                $td.html(_.template('<a href="#" data-toggle="tooltip" id="ztool" data-placement="left" title="<%- tip%>"><%- Recipients%></a>', {
+                    tip: tip,
+                    Recipients:message
+                }));
+               
+               
+                $td.children('[data-toggle="tooltip"]').tooltip();
+            }
+        });
+       
+        mvc.Components.get('taskCollectionTable').getVisualization(function(tableView) {
+           
+            // Register custom cell renderer
+            tableView.table.addCellRenderer(new CustomTooltipRenderer());
+   
+            // Force the table to re-render
+            tableView.table.render();
+        });
+ 
+ })
