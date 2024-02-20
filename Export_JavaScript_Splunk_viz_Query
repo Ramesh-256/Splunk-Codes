@@ -1,0 +1,101 @@
+require(["splunkjs/mvc", "splunkjs/mvc/utils", "splunkjs/mvc/tokenutils", "underscore", "jquery", "splunkjs/mvc/simplexml", "splunkjs/mvc/layoutview", "splunkjs/mvc/simplexml/dashboardview", "splunkjs/mvc/simplexml/dashboard/panelref", "splunkjs/mvc/simplexml/element/chart", "splunkjs/mvc/simplexml/element/event", "splunkjs/mvc/simplexml/element/html", "splunkjs/mvc/simplexml/element/list", "splunkjs/mvc/simplexml/element/map", "splunkjs/mvc/simplexml/element/single", "splunkjs/mvc/simplexml/element/table", "splunkjs/mvc/simplexml/element/visualization", "splunkjs/mvc/simpleform/formutils", "splunkjs/mvc/simplexml/eventhandler", "splunkjs/mvc/simplexml/searcheventhandler", "splunkjs/mvc/simpleform/input/dropdown", "splunkjs/mvc/simpleform/input/radiogroup", "splunkjs/mvc/simpleform/input/linklist", "splunkjs/mvc/simpleform/input/multiselect", "splunkjs/mvc/simpleform/input/checkboxgroup", "splunkjs/mvc/simpleform/input/text", "splunkjs/mvc/simpleform/input/timerange", "splunkjs/mvc/simpleform/input/submit", "splunkjs/mvc/searchmanager", "splunkjs/mvc/savedsearchmanager", "splunkjs/mvc/postprocessmanager", "splunkjs/mvc/simplexml/urltokenmodel"
+          
+        ], function(mvc, utils, TokenUtils, _, $, DashboardController, LayoutView, Dashboard, PanelRef, ChartElement, EventElement, HtmlElement, ListElement, MapElement, SingleElement, TableElement, VisualizationElement, FormUtils, EventHandler, SearchEventHandler, DropdownInput, RadioGroupInput, LinkListInput, MultiSelectInput, CheckboxGroupInput, TextInput, TimeRangeInput, SubmitButton, SearchManager, SavedSearchManager, PostProcessManager, UrlTokenModel) {
+            function setToken(name, value) {
+                defaultTokenModel.set(name, value);
+                submittedTokenModel.set(name, value);
+            }
+            function unsetToken(name) {
+                defaultTokenModel.unset(name);
+                submittedTokenModel.unset(name);
+            }
+          
+            var defaultTokenModel = mvc.Components.get("default");
+            var submittedTokenModel = mvc.Components.get("submitted");
+            var service = mvc.createService({ owner: "nobody" });
+            console.log("new");
+           
+            var v1=0;
+            $("#search_image").on('click', function () {
+              
+                    setToken("xyz","v1");
+                    var value1= defaultTokenModel.get("abc");
+                    
+                    unsetToken("abc");
+                    var value2= defaultTokenModel.get("xyz");
+                    
+            });
+            $("#wrong").on('click', function () {
+              
+                setToken("abc","v1");
+                var value1= defaultTokenModel.get("abc");
+                
+                unsetToken("xyz");
+                var value2= defaultTokenModel.get("xyz");
+                    
+        });
+        document.getElementById("download").addEventListener("click", function() {
+           
+            var bgroup= defaultTokenModel.get("bg"); 
+            var stats= defaultTokenModel.get("status");
+            var c= defaultTokenModel.get("an"); 
+           
+            var search1 = new SearchManager({
+                preview: true,
+                cache: true,
+                // search: " index=mulesoft_application | table result* | rename result.data{}.*{} as * | rename result.* as * | table snapshot,isProduction,appName appVersion environment businessGroup status timestamp criticality|mvexpand timestamp| mvexpand appName|mvexpand appVersion| mvexpand environment|mvexpand status|mvexpand businessGroup|mvexpand criticality|dedup businessGroup environment snapshot appVersion criticality isProduction status appName    timestamp "+ bgroup +" "+ evn +" "+ c+" "+ s +" |head 100 ",
+
+                search: " index=relational_!transaction_summary_grouping_new  result.finalStatus="+stats+ "| table result* | rename result.* AS *  | table businessInterface,finalBusinessKeysAndValues,finalStatus,*|search businessInterface="+bgroup+"| eval x=split(finalBusinessKeysAndValues,'&splitStr&') | mvexpand x | eval k=split(x,'@&==&@') | eval businessKey=mvindex(b,0),businessValue=mvindex(b,1) |rename finalCIDs as transactionID,transactionStartTime as TimeStamp(GMT)  | table transactionID,TimeStamp(GMT),finalStatus,ErrorType,businessField1,finalProcessingTime,appName,valueField1|dedup transactionID|search valueField1="+c+" "
+            });
+            var myResults = search1.data("results");
+            myResults.on("data", function () {
+                 var data = myResults.collection().toJSON();
+                 console.log(data);
+                 DownloadJSON2CSV(data);
+             });
+          
+    
+    
+          function DownloadJSON2CSV(objArray)
+          {
+            alert("JSON");
+            var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+            var str = '';
+            var headers = new Array();
+            for (var i = 0; i < array.length; i++) {
+                var line = '';
+                var data = array[i];
+                for (var index in data) {
+                    headers.push(index);
+                    if (line != '') {
+                        line += ','
+                    }
+                    line += '"' + array[i][index] + '"';
+                    console.log('line: ' + line);
+                }
+                str += line + ((array.length>1) ? '\r\n' : '');
+                line = '';
+            }
+    
+            headers = getHeaders(headers);
+            str = headers + '\r\n' + str;
+            console.log('final : ' + str);
+            var hiddenElement = document.createElement('a');
+            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(str);
+            hiddenElement.target = '_blank';
+            hiddenElement.download ='download.csv';
+            hiddenElement.click();
+        }
+    
+        function getHeaders(a) {
+            var temp = {};
+            for (var i = 0; i < a.length; i++)
+                temp[a[i]] = true;
+            var r = [];
+            for (var k in temp)
+                r.push(k);
+            return r;
+        }
+    
+    });
+        })
